@@ -1,0 +1,40 @@
+
+apply plugin: 'eclipse'
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
+
+// Project version
+version = '1.0'
+
+tasks.eclipse.dependsOn(cleanEclipse)
+
+repositories {
+	maven {
+		url "${artifactory_contextUrl}/libs-release"
+	}
+	mavenCentral()
+}
+
+eclipse {
+	classpath {
+		defaultOutputDir = file('eclipse-build')
+	}
+}
+
+dependencies {
+    compile 'org.projectlombok:lombok:1.16.6'
+    compile 'com.google.guava:guava:19.0'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
+	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.1'
+	compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.1'
+	compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.7.1'
+	compile 'org.slf4j:slf4j-api:1.7.18'
+	compile 'org.slf4j:slf4j-simple:1.7.18'
+	compile 'org.freemarker:freemarker:2.3.23'
+
+	testCompile 'junit:junit:4.11'
+}
+
