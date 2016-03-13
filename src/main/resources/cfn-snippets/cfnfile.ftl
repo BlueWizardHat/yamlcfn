@@ -43,7 +43,7 @@
 </#list>
         ],
 </#if>
-        "VpcId" : <@showval value=sg.vpcId />,
+        "VpcId" : <@showval value=sg.vpcId /><#if sg.tags?has_content>,</#if>
 <#if sg.tags?has_content>
         "Tags" : [
 <#list sg.tags as tag>
