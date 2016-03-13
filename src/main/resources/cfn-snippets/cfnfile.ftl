@@ -44,6 +44,7 @@
         ],
 </#if>
         "VpcId" : <@showval value=sg.vpcId />,
+<#if sg.tags?has_content>
         "Tags" : [
 <#list sg.tags as tag>
           {
@@ -52,6 +53,7 @@
           }<#sep>,</#sep>
 </#list>
         ]
+</#if>
       }
     }<#if sg?has_next || ingress?has_content || egress?has_content>,</#if>
 </#list>

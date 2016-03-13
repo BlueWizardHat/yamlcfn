@@ -108,6 +108,9 @@ public class YamlParser {
 		if (securityGroup.getDescription() == null) {
 			throw new IllegalArgumentException("Securitygroup '" + name + "' is missing a description");
 		}
+		if (securityGroup.getVpc() == null) {
+			throw new IllegalArgumentException("Securitygroup '" + name + "' is missing a vpc");
+		}
 		yamlFile.getSecurityGroups().put(securityGroup.getName(), securityGroup);
 		log.debug("Added securitygroup '{}': {}", securityGroup.getName(), securityGroup);
 	}

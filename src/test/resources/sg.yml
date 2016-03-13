@@ -6,18 +6,18 @@
   - alias: { name: "redis", type: "ports", value: "6379" }
   - alias: { name: "known-sg", type: "securitygroup", value: "sg-asasdds" }
 
-  - param: { name: "owner", type: "string", default: "operations" }
-  - param: { name: "env-prefix", type: "string", description: "environment prefix" }
-  - param: { name: "vpc-id", type: "string", description: "vpc for the security groups" }
+  - param: { name: "param-owner", type: "string", default: "operations" }
+  - param: { name: "param-env-prefix", type: "string", description: "environment prefix" }
+  - param: { name: "param-vpc-id", type: "string", description: "vpc for the security groups" }
 
   - defaults:
-      vpc: "{vpc-id}"
+      vpc: "{param-vpc-id}"
       tags:
         - key: "Name"
           value:
             fn: "join"
             delimiter: "-"
-            values: [ "{env-prefix}", "{self:name}", "sg" ]
+            values: [ "{param-env-prefix}", "{self:name}", "sg" ]
 
   - securitygroup:
       name: "frontend-elb"
@@ -26,6 +26,8 @@
         - { ref: "world", type: "tcp", ports: "http,https" }
       outbound:
         - "frontend-app"
+      tags:
+        - { key: "Role", value: "Something" }
 
   - securitygroup:
       name: "frontend-app"
