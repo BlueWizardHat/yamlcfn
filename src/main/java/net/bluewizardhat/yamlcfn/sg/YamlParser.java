@@ -206,7 +206,7 @@ public class YamlParser {
 		}
 	}
 
-	private static final Pattern numericPorts = Pattern.compile("^(\\d+)(-(\\d+))?$");
+	private static final Pattern numericPorts = Pattern.compile("^(\\d+)(-(-1|\\d+))?$");
 	private Optional<PortSpec> parseNumericPortsRange(String range) {
 		Matcher matcher = numericPorts.matcher(range);
 		if (matcher.matches()) {

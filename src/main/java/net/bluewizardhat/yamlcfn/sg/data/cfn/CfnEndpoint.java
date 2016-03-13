@@ -23,14 +23,11 @@ public abstract class CfnEndpoint {
 	@Value
 	@EqualsAndHashCode(callSuper = false)
 	public static class CidrEndpoint extends CfnEndpoint {
-		private CfnValue.StringValue value;
+		private CfnValue value;
 		@Override
 		public String getType() { return "CIDR"; }
 		@Override
 		public boolean isInternal() { return true; }
-		public CidrEndpoint(String cidr) {
-			value = new CfnValue.StringValue(cidr);
-		}
 	}
 
 	@Value

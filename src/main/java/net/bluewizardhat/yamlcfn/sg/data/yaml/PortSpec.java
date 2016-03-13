@@ -35,7 +35,6 @@ public class PortSpec {
 		COMMON_PORTS.put("smtp", new PortSpec(25));
 		COMMON_PORTS.put("http", new PortSpec(80));
 		COMMON_PORTS.put("https", new PortSpec(443));
-		COMMON_PORTS.put("http-alt", new PortSpec(8080));
 		COMMON_PORTS.put("mysql", new PortSpec(3306));
 		COMMON_PORTS.put("postgresl", new PortSpec(5432));
 		COMMON_PORTS.put("echo-request", new PortSpec(8, -1));

@@ -150,7 +150,7 @@ public class Transformer {
 		if (alias != null) {
 			switch (alias.getType()) {
 			case CIDR:
-				return new CfnEndpoint.CidrEndpoint(alias.getValue());
+				return new CfnEndpoint.CidrEndpoint(new StringValue(alias.getValue()));
 			case SECURITYGROUP:
 				return new CfnEndpoint.SgEndpoint(new StringValue(alias.getValue()), true);
 			default:
@@ -163,7 +163,7 @@ public class Transformer {
 			if (param != null) {
 				switch (param.getType()) {
 				case CIDR:
-					return new CfnEndpoint.CidrEndpoint(param.getCfnName());
+					return new CfnEndpoint.CidrEndpoint(new RefValue(param.getCfnName()));
 				case SECURITYGROUP:
 					return new CfnEndpoint.SgEndpoint(new RefValue(param.getCfnName()), true);
 				default:
