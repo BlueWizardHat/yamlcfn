@@ -81,11 +81,13 @@ public class Transformer {
 			transformOutbound(yamlFile, cfnFile, transformed, ySg, cfnSg);
 			cfnSgs.add(cfnSg);
 			transformed.add(ySg.getName());
+			log.debug("Transformed security group: '{}'", cfnSg);
 		});
 		cfnFile.setSecuritygroups(cfnSgs);
 	}
 
 	private static void transformInbound(YamlFile yamlFile, CfnFile cfnFile, Set<String> transformed, SecurityGroup ySg, CfnSecurityGroup cfnSg) {
+		Set<String> ingressNames = new HashSet<>();
 		ySg.getInbound().forEach(unresolved -> {
 			RefWithPort ref = (RefWithPort) unresolved;
 			CfnConnection connection = new CfnConnection()
@@ -95,7 +97,12 @@ public class Transformer {
 					.setFromPort(ref.getPortSpec().getFromPort())
 					.setToPort(ref.getPortSpec().getToPort());
 
-			if (connection.getFrom().isInternal()) {
+			if (ingressNames.contains(connection.getName())) {
+				throw new IllegalArgumentException("Duplicate ingress rule '"+ connection.getName() +"' generated while transforming '" + ySg.getName() + "'");
+			}
+			ingressNames.add(connection.getName());
+
+			if (connection.getFrom().isInline()) {
 				cfnSg.getInbound().add(connection);
 			} else {
 				cfnFile.getIngress().add(connection);
@@ -104,6 +111,7 @@ public class Transformer {
 	}
 
 	private static void transformOutbound(YamlFile yamlFile, CfnFile cfnFile, Set<String> transformed, SecurityGroup ySg, CfnSecurityGroup cfnSg) {
+		Set<String> egressNames = new HashSet<>();
 		ySg.getOutbound().forEach(unresolved -> {
 			List<RefWithPort> refs = resolveOutboundConnections(yamlFile, unresolved, ySg);
 			for (RefWithPort ref : refs) {
@@ -114,7 +122,12 @@ public class Transformer {
 						.setFromPort(ref.getPortSpec().getFromPort())
 						.setToPort(ref.getPortSpec().getToPort());
 
-				if (connection.getTo().isInternal()) {
+				if (egressNames.contains(connection.getName())) {
+					throw new IllegalArgumentException("Duplicate egress rule '"+ connection.getName() +"' generated while transforming '" + ySg.getName() + "'");
+				}
+				egressNames.add(connection.getName());
+
+				if (connection.getTo().isInline()) {
 					cfnSg.getOutbound().add(connection);
 				} else {
 					cfnFile.getEgress().add(connection);
@@ -130,6 +143,7 @@ public class Transformer {
 			return resolved;
 		}
 
+		log.trace("Attempting to resolve outbound connection '{}' to '{}'", self.getName(), unresolved.getRef());
 		SecurityGroup target = "self".equals(unresolved.getRef()) ? self : yamlFile.getSecurityGroups().get(unresolved.getRef());
 		if (target != null) {
 			List<RefWithPort> resolved = target.getInbound().stream()
@@ -138,11 +152,12 @@ public class Transformer {
 				.map(res -> new RefWithPort(unresolved.getRef(), res.getProtocol(), res.getPortSpec()))
 				.collect(Collectors.toList());
 			if (!resolved.isEmpty()) {
+				log.trace("Found incoming connections on '{}' from '{}' -> {}", target.getName(), self.getName(), resolved);
 				return resolved;
 			}
 			throw new IllegalArgumentException("Missing inbound rule on security group: '" + unresolved.getRef() + "'.'" + self.getName() + "'");
 		}
-		throw new IllegalArgumentException("Missing security group: '" + unresolved.getRef() + "'");
+		throw new IllegalArgumentException("Security group: '" + unresolved.getRef() + "' not defined");
 	}
 
 	private static CfnEndpoint resolveEndPoint(String ref, YamlFile yamlFile, SecurityGroup self, Set<String> transformed) {

@@ -44,7 +44,10 @@ public abstract class CfnValue {
 		private List<CfnValue> elements;
 		@Override
 		public String getType() { return "JOIN"; }
+		@Override
+		public String getValue() { throw new UnsupportedOperationException(); }
 	}
 
 	public abstract String getType();
+	public abstract String getValue();
 }

@@ -17,6 +17,7 @@
 package net.bluewizardhat.yamlcfn.sg.data.cfn;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.bluewizardhat.yamlcfn.sg.data.cfn.CfnEndpoint.SgEndpoint;
 import net.bluewizardhat.yamlcfn.sg.data.cfn.CfnValue.RefValue;
@@ -31,26 +32,32 @@ public class CfnConnection {
 	private int fromPort;
 	private int toPort;
 
-	public String getName () {
+	@Getter(lazy = true)
+	private final String name = generateName();
+
+	private String generateName() {
 		if (from instanceof SgEndpoint && to instanceof SgEndpoint) {
-			boolean self = false;
 			SgEndpoint sgFrom = (SgEndpoint) from;
 			SgEndpoint sgTo = (SgEndpoint) to;
 			if (sgFrom.getValue() instanceof RefValue && sgTo.getValue() instanceof RefValue) {
-				self = sgFrom.getValue().toString().equals(sgTo.getValue().toString());
-				if (self) {
+				if (sgFrom.getValue().toString().equals(sgTo.getValue().toString())) {
 					return shortname(sgFrom.getValue()) + ports() + "Self";
 				} else {
 					return shortname(sgFrom.getValue()) + "To" + shortname(sgTo.getValue()) + ports();
 				}
 			}
 		}
-		throw new IllegalArgumentException("Error trying to name non sg-to-sg connection");
+		if (to instanceof SgEndpoint) {
+			return to.getValue().getValue() + " From " + from.getValue().getValue() + " " + ports();
+		}
+		if (from instanceof SgEndpoint) {
+			return from.getValue().getValue() + " To " + to.getValue().getValue() + " " + ports();
+		}
+		throw new IllegalArgumentException("Connection without an sg");
 	}
 
 	private String shortname(CfnValue value) {
-		RefValue refv = (RefValue) value;
-		return refv.getValue().replace("SecurityGroup", "");
+		return value.getValue().replace("SecurityGroup", "");
 	}
 
 	private String ports() {

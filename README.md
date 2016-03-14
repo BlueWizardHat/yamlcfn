@@ -1,13 +1,13 @@
 YamlCfn
 ==========================================================================
 
-This small project converts a security group description in yaml to a cloudformation template ready for usage in amazon aws.
+This small project converts a security group description in yaml to a cloudformation template ready for usage in amazon aws. Some knowledge about Cloudformation and YAML is required to use this project.
 
 ## Intro
 
-Cloudformatino templates are very verbose, even creating just a few security groups easily have you writing several hundred lines of JSON. Having recently written a 1200 line JSON template with a bunch of security groups I got to thinking "there must be an easier way to describe this".
+Cloudformation templates are very verbose, even creating just a few security groups easily have you writing several hundred lines of JSON. Having recently written a 1200 line JSON template with a bunch of security groups I got to thinking "there must be an easier way to describe this".
 
-The aim of this project is to reduce the amount of handwritten code by allowing you to describe security groups in YAML and letting YamlCfn take care of all the details of the JSON template, including when to write ingress and egress rules as inline in the security group or add them later in the template.
+The aim of this project is to reduce the amount of handwritten code by allowing you to describe security groups in YAML and letting YamlCfn take care of all the details of the JSON template, including when to write ingress and egress rules as inline in a security group or add them later in the template.
 
 ## The YAML  format
 
@@ -200,9 +200,9 @@ Self references can be created using either the name of the security group or "s
 
 Note that in that example using a "ref" of "backend-app" instead of "self" would accomplish the same thing.
 
-Self references are also an example of the descriptive nature of the yaml format, as it is much more complicated to accomplish the same in a cloudformation JSON template. In a cloudformation template self references are actually impossible, and to accomplish it you need to frist create a security group and then add separate ingress rules later in the template. YamlCfn will automatically do this for you.
+Self references are also an example of the descriptive nature of the yaml format, as it is much more complicated to accomplish the same in a cloudformation JSON template. In a cloudformation template self references are actually invalid to put directly in the security group definition. To accomplish a self reference you need to first create a security group and then add separate ingress rules later in the template. YamlCfn will automatically do this for you.
 
-Only limitation of YamlCfn is that you cannot use a CIDR as a normal string, in other words this will not work
+One limitation of inbound rules in YamlCfn is that you cannot use a CIDR as a normal string, in other words this will not work
 
 	- securitygroup:
 	    name: "backend-app"
@@ -243,7 +243,7 @@ However outbound rules have an additional feature in that if the outbound rule p
 	    outbound:
 	      - "self"
 
-That single outbound "self" reference automatically matches both of the inbound "self" references. That's the way auto matching works, a single outbound rule is enough to match several inbound rules. Note also that YamlCfn does ont check if duplicate outbound similar rules are generated, it is up to you to write templates that does not cause duplicates.
+That single outbound "self" reference automatically matches both of the inbound "self" references. That's the way auto matching works, a single outbound rule is enough to match several inbound rules.
 
 Now to combine our frontend and backend hazelcast cluster and throw in a mysql database as well and we almost have a complete although simple application:
 
@@ -271,7 +271,7 @@ Now to combine our frontend and backend hazelcast cluster and throw in a mysql d
 	    inbound:
 	      - { ref: "backend-app", type: "tcp", ports: "mysql" }
 
-Ofcourse as already said the auto matching feature only works on security groups defined in the same file and "self", if you need to write an outbound rule to an alias or param then you will still need to specify it with "ref", "type" and "ports".
+Ofcourse as already said the auto matching feature only works for security groups defined in the same file and for "self", if you need to write an outbound rule to an alias or param then you will still need to specify it with "ref", "type" and "ports".
 
 ### Tags
 
@@ -301,7 +301,7 @@ Every value in the values array of a join are strings or parameter strings. This
 	    type: "string"
 	    description: "environment prefix"
 
-Now put this tag on all your security groups
+Now you can put this tag on all your security groups
 
 	tags:
 	  - key: "Name"
@@ -339,7 +339,7 @@ We can now create a "defaults" section that gives all security groups the vpc an
 	          delimiter: "-"
 	          values: [ "{env-prefix}", "{self:name}", "sg" ]
 
-And the security groups now automatically have the vpc and name tag defined in defaults.
+And the security groups now automatically have the vpc and name tag defined in defaults, you wont have to copy/paste the same definition into all security groups.
 
 Should you want to "defaults" can also take "description" and both inbound and outbound rules. You probably don't want to do that!
 

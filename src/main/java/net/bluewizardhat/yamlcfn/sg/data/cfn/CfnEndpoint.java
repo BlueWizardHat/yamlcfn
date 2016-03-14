@@ -27,18 +27,19 @@ public abstract class CfnEndpoint {
 		@Override
 		public String getType() { return "CIDR"; }
 		@Override
-		public boolean isInternal() { return true; }
+		public boolean isInline() { return true; }
 	}
 
 	@Value
 	@EqualsAndHashCode(callSuper = false)
 	public static class SgEndpoint extends CfnEndpoint {
 		private CfnValue value;
-		private boolean internal;
+		private boolean inline;
 		@Override
 		public String getType() { return "SG"; }
 	}
 
 	public abstract String getType();
-	public abstract boolean isInternal();
+	public abstract CfnValue getValue();
+	public abstract boolean isInline();
 }

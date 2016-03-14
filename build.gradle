@@ -1,6 +1,7 @@
 
 apply plugin: 'eclipse'
 apply plugin: 'java'
+apply plugin: 'application'
 
 sourceCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
@@ -9,6 +10,8 @@ compileJava.options.encoding = 'UTF-8'
 version = '1.0'
 
 tasks.eclipse.dependsOn(cleanEclipse)
+
+mainClassName = 'net.bluewizardhat.yamlcfn.sg.CommandLine'
 
 repositories {
 	maven {
