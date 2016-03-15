@@ -1,0 +1,70 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Single security group for a frontend with a datbase",
+
+  "Parameters" : {
+    "VpcId" : {
+      "Description" : "VPC for the security groups",
+      "Type" : "String"
+    }
+  },
+
+  "Resources" : {
+    "FrontendAppSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Frontend application",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" }
+      }
+    },
+    "DatabaseSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "mysql/rds database",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" }
+      }
+    },
+
+    "FrontendAppToDatabaseTcp3306Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "DatabaseSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 3306,
+        "ToPort" : 3306
+      }
+    }
+  },
+
+  "Outputs" : {
+    "FrontendAppSecurityGroup" : {
+      "Value" : { "Ref" : "FrontendAppSecurityGroup" }
+    },
+    "DatabaseSecurityGroup" : {
+      "Value" : { "Ref" : "DatabaseSecurityGroup" }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+---
+  - description: "Security groups for Blah"
+
+  - alias: { name: "localnet", type: "cidr", value: "192.168.0.0/16" }
+  - alias: { name: "hardcoded-sg", type: "securitygroup", value: "sg-1234567" }
+  - alias: { name: "portranges", type: "ports", value: "123,456,500-510" }
+
+  - param: { name: "env-prefix", type: "string", description: "environment prefix" }
+  - param: { name: "vpc-id", type: "string", description: "VPC for the security groups" }
+  - param: { name: "param-cidr", type: "cidr" }
+  - param: { name: "param-sg", type: "securitygroup" }
+
+  - defaults:
+      vpc: "{vpc-id}"
+      tags:
+        - key: "Name"
+          value:
+            fn: "join"
+            delimiter: "-"
+            values: [ "{env-prefix}", "{self:name}", "sg" ]
+        - { key: "Cfn-Name", value: "{self:cfn-name}" }
+
+  - securitygroup:
+      name: "frontend-app-demo"
+      description: "Frontend-app"
+      inbound:
+        - { ref: "world", type: "tcp", ports: "http" }
+
+  - securitygroup:
+      name: "alias-cidr-demo"
+      description: "-"
+      inbound:
+        - { ref: "localnet", type: "tcp", ports: "http" }
+      outbound:
+        - { ref: "localnet", type: "tcp", ports: "http" }
+
+  - securitygroup:
+      name: "param-cidr-demo"
+      description: "-"
+      inbound:
+        - { ref: "{param-cidr}", type: "tcp", ports: "http" }
+      outbound:
+        - { ref: "{param-cidr}", type: "tcp", ports: "http" }
+
+  - securitygroup:
+      name: "alias-sg-demo"
+      description: "-"
+      inbound:
+        - { ref: "hardcoded-sg", type: "tcp", ports: "http" }
+      outbound:
+        - { ref: "hardcoded-sg", type: "tcp", ports: "http" }
+
+  - securitygroup:
+      name: "param-sg-demo"
+      description: "-"
+      inbound:
+        - { ref: "{param-sg}", type: "tcp", ports: "http" }
+      outbound:
+        - { ref: "{param-sg}", type: "tcp", ports: "http" }
+
+  - securitygroup:
+      name: "alias-portranges-demo"
+      description: "-"
+      inbound:
+        - { ref: "world", type: "tcp", ports: "portranges" }
+      outbound:
+        - { ref: "world", type: "tcp", ports: "portranges" }
+
+  - securitygroup:
+      name: "self-referencing-portranges-demo"
+      description: "-"
+      inbound:
+        - { ref: "self", type: "tcp", ports: "portranges" }
+      outbound:
+        - "self"

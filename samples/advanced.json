@@ -1,0 +1,283 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Security groups for Blah",
+
+  "Parameters" : {
+    "EnvPrefix" : {
+      "Description" : "environment prefix",
+      "Type" : "String"
+    },
+    "VpcId" : {
+      "Description" : "VPC for the security groups",
+      "Type" : "String"
+    }
+  },
+
+  "Resources" : {
+    "FrontendElbSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Frontend ELB",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "frontend-elb", "sg" ] ] }
+          }
+        ]
+      }
+    },
+    "FrontendAppSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Frontend application",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "FrontendElbSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "frontend-app", "sg" ] ] }
+          }
+        ]
+      }
+    },
+    "FrontendMemSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Frontend Elasticache",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 6379,
+            "ToPort": 6379
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "frontend-mem", "sg" ] ] }
+          }
+        ]
+      }
+    },
+    "BackendElbSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Backend ELB",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "backend-elb", "sg" ] ] }
+          }
+        ]
+      }
+    },
+    "BackendAppSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Backend application",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "BackendElbSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "backend-app", "sg" ] ] }
+          }
+        ]
+      }
+    },
+    "BackendRdsSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Backend RDS instance",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "backend-rds", "sg" ] ] }
+          }
+        ]
+      }
+    },
+
+    "BackendAppTcp5701SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 5701,
+        "ToPort" : 5701
+      }
+    },
+    "BackendAppIcmp8SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "icmp",
+        "FromPort" : 8,
+        "ToPort" : -1
+      }
+    },
+    "BackendAppIcmp0SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "icmp",
+        "FromPort" : 0,
+        "ToPort" : -1
+      }
+    },
+
+    "FrontendElbToFrontendAppTcp80Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "FrontendElbSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 80,
+        "ToPort" : 80
+      }
+    },
+    "FrontendAppToFrontendMemTcp6379Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "FrontendMemSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 6379,
+        "ToPort" : 6379
+      }
+    },
+    "FrontendAppToBackendElbTcp80Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "FrontendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendElbSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 80,
+        "ToPort" : 80
+      }
+    },
+    "BackendElbToBackendAppTcp80Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendElbSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 80,
+        "ToPort" : 80
+      }
+    },
+    "BackendAppTcp5701SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 5701,
+        "ToPort" : 5701
+      }
+    },
+    "BackendAppIcmp8SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "icmp",
+        "FromPort" : 8,
+        "ToPort" : -1
+      }
+    },
+    "BackendAppIcmp0SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "IpProtocol" : "icmp",
+        "FromPort" : 0,
+        "ToPort" : -1
+      }
+    },
+    "BackendAppToBackendRdsTcp3306Egress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "BackendAppSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "BackendRdsSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 3306,
+        "ToPort" : 3306
+      }
+    }
+  },
+
+  "Outputs" : {
+    "FrontendElbSecurityGroup" : {
+      "Value" : { "Ref" : "FrontendElbSecurityGroup" }
+    },
+    "FrontendAppSecurityGroup" : {
+      "Value" : { "Ref" : "FrontendAppSecurityGroup" }
+    },
+    "FrontendMemSecurityGroup" : {
+      "Value" : { "Ref" : "FrontendMemSecurityGroup" }
+    },
+    "BackendElbSecurityGroup" : {
+      "Value" : { "Ref" : "BackendElbSecurityGroup" }
+    },
+    "BackendAppSecurityGroup" : {
+      "Value" : { "Ref" : "BackendAppSecurityGroup" }
+    },
+    "BackendRdsSecurityGroup" : {
+      "Value" : { "Ref" : "BackendRdsSecurityGroup" }
+    }
+  }
+}

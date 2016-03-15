@@ -1,0 +1,341 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Security groups for Blah",
+
+  "Parameters" : {
+    "EnvPrefix" : {
+      "Description" : "environment prefix",
+      "Type" : "String"
+    },
+    "VpcId" : {
+      "Description" : "VPC for the security groups",
+      "Type" : "String"
+    },
+    "ParamCidr" : {
+      "Type" : "String"
+    },
+    "ParamSg" : {
+      "Type" : "String"
+    }
+  },
+
+  "Resources" : {
+    "FrontendAppDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Frontend-app",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "frontend-app-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "FrontendAppDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "AliasCidrDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "192.168.0.0/16",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "CidrIp" : "192.168.0.0/16",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-cidr-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "AliasCidrDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "ParamCidrDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : { "Ref" : "ParamCidr" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "CidrIp" : { "Ref" : "ParamCidr" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "param-cidr-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "ParamCidrDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "AliasSgDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : "sg-1234567",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "DestinationSecurityGroupId" : "sg-1234567",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-sg-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "AliasSgDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "ParamSgDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "SourceSecurityGroupId" : { "Ref" : "ParamSg" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "DestinationSecurityGroupId" : { "Ref" : "ParamSg" },
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "param-sg-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "ParamSgDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "AliasPortrangesDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 123,
+            "ToPort": 123
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 456,
+            "ToPort": 456
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 500,
+            "ToPort": 510
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 123,
+            "ToPort": 123
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 456,
+            "ToPort": 456
+          },
+          {
+            "CidrIp" : "0.0.0.0/0",
+            "IpProtocol": "tcp",
+            "FromPort": 500,
+            "ToPort": 510
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-portranges-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "AliasPortrangesDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+    "SelfReferencingPortrangesDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "self-referencing-portranges-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "Cfn-Name",
+            "Value" : "SelfReferencingPortrangesDemoSecurityGroup"
+          }
+        ]
+      }
+    },
+
+    "SelfReferencingPortrangesDemoTcp123SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 123,
+        "ToPort" : 123
+      }
+    },
+    "SelfReferencingPortrangesDemoTcp456SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 456,
+        "ToPort" : 456
+      }
+    },
+    "SelfReferencingPortrangesDemoTcp500To510SelfIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "SourceSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 500,
+        "ToPort" : 510
+      }
+    },
+
+    "SelfReferencingPortrangesDemoTcp123SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 123,
+        "ToPort" : 123
+      }
+    },
+    "SelfReferencingPortrangesDemoTcp456SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 456,
+        "ToPort" : 456
+      }
+    },
+    "SelfReferencingPortrangesDemoTcp500To510SelfEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "DestinationSecurityGroupId" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" },
+        "IpProtocol" : "tcp",
+        "FromPort" : 500,
+        "ToPort" : 510
+      }
+    }
+  },
+
+  "Outputs" : {
+    "FrontendAppDemoSecurityGroup" : {
+      "Value" : { "Ref" : "FrontendAppDemoSecurityGroup" }
+    },
+    "AliasCidrDemoSecurityGroup" : {
+      "Value" : { "Ref" : "AliasCidrDemoSecurityGroup" }
+    },
+    "ParamCidrDemoSecurityGroup" : {
+      "Value" : { "Ref" : "ParamCidrDemoSecurityGroup" }
+    },
+    "AliasSgDemoSecurityGroup" : {
+      "Value" : { "Ref" : "AliasSgDemoSecurityGroup" }
+    },
+    "ParamSgDemoSecurityGroup" : {
+      "Value" : { "Ref" : "ParamSgDemoSecurityGroup" }
+    },
+    "AliasPortrangesDemoSecurityGroup" : {
+      "Value" : { "Ref" : "AliasPortrangesDemoSecurityGroup" }
+    },
+    "SelfReferencingPortrangesDemoSecurityGroup" : {
+      "Value" : { "Ref" : "SelfReferencingPortrangesDemoSecurityGroup" }
+    }
+  }
+}

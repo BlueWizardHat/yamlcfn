@@ -1,0 +1,65 @@
+---
+  - description: "Security groups for Blah"
+
+  - alias: { name: "hazelcast-port", type: "ports", value: "5701" }
+  - alias: { name: "redis-port", type: "ports", value: "6379" }
+
+  - param: { name: "env-prefix", type: "string", description: "environment prefix" }
+  - param: { name: "vpc-id", type: "string", description: "VPC for the security groups" }
+
+  - defaults:
+      vpc: "{vpc-id}"
+      tags:
+        - key: "Name"
+          value:
+            fn: "join"
+            delimiter: "-"
+            values: [ "{env-prefix}", "{self:name}", "sg" ]
+
+  - securitygroup:
+      name: "frontend-elb"
+      description: "Frontend ELB"
+      inbound:
+        - { ref: "world", type: "tcp", ports: "http,https" }
+      outbound:
+        - "frontend-app"
+
+  - securitygroup:
+      name: "frontend-app"
+      description: "Frontend application"
+      inbound:
+        - { ref: "frontend-elb", type: "tcp", ports: "80" }
+      outbound:
+        - "frontend-mem"
+        - "backend-elb"
+
+  - securitygroup:
+      name: "frontend-mem"
+      description: "Frontend Elasticache"
+      inbound:
+        - { ref: "frontend-app", type: "tcp", ports: "redis-port" }
+
+  - securitygroup:
+      name: "backend-elb"
+      description: "Backend ELB"
+      inbound:
+        - { ref: "frontend-app", type: "tcp", ports: "http" }
+      outbound:
+        - "backend-app"
+
+  - securitygroup:
+      name: "backend-app"
+      description: "Backend application"
+      inbound:
+        - { ref: "backend-elb", type: "tcp", ports: "http" }
+        - { ref: "self", type: "tcp", ports: "hazelcast-port" }
+        - { ref: "self", type: "icmp", ports: "echo-request,echo-reply" }
+      outbound:
+        - "self"
+        - "backend-rds"
+
+  - securitygroup:
+      name: "backend-rds"
+      description: "Backend RDS instance"
+      inbound:
+        - { ref: "backend-app", type: "tcp", ports: "mysql" }

@@ -1,0 +1,23 @@
+---
+  - description: "Single security group for a frontend with a datbase"
+
+  - param:
+      name: "vpc-id"
+      type: "string"
+      description: "VPC for the security groups"
+
+  - securitygroup:
+      name: "frontend-app"
+      description: "Frontend application"
+      inbound:
+        - { ref: "world", type: "tcp", ports: "http,https" }
+      outbound:
+        - "database"
+      vpc: "{vpc-id}"
+
+  - securitygroup:
+      name: "database"
+      description: "mysql/rds database"
+      inbound:
+        - { ref: "frontend-app", type: "tcp", ports: "mysql" }
+      vpc: "{vpc-id}"
