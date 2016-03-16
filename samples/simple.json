@@ -5,7 +5,7 @@
   "Parameters" : {
     "VpcId" : {
       "Description" : "VPC for the security groups",
-      "Type" : "String"
+      "Type" : "AWS::EC2::VPC::Id"
     }
   },
 

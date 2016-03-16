@@ -18,7 +18,7 @@ Here is a very simple security group description:
 
 	  - param:
 	      name: "vpc-id"
-	      type: "string"
+	      type: "vpc"
 	      description: "vpc for the security groups"
 
 	  - securitygroup:
@@ -43,7 +43,7 @@ Those 14 lines of YAML becomes no less than 40 lines in Cloudformation JSON
 	  "Parameters" : {
 	    "VpcId" : {
 	      "Description" : "vpc for the security groups",
-	      "Type" : "String"
+	      "Type" : "AWS::EC2::VPC::Id"
 	    }
 	  },
 
@@ -88,7 +88,7 @@ In the above example you might notice that the "vpc-id" parameter was specified
 
 	- param:
 	    name: "vpc-id"
-	    type: "string"
+	    type: "vpc"
 	    description: "vpc for the security groups"
 
 And the inbound rule was:
@@ -97,7 +97,7 @@ And the inbound rule was:
 
 In YAML these are objects and the YAML format allows us some freedom in how to write them, for example the parameter could just as well be written
 
-	- param: { name: "vpc-id", type: "string", description: "vpc for the security groups" }
+	- param: { name: "vpc-id", type: "vpc", description: "vpc for the security groups" }
 
 And the inbound rule could be
 
@@ -111,7 +111,12 @@ Before we get to the meat I think it's time to first take a quick look at parame
 
 You have already seen an example of "param", and you saw how a "param" became a parameter in the cloudformation template. 
 
-Params have a mandatory "name" and "type", and optional "description" and "default". "param"s can have the types "cidr", "securitygroup" or "string", these types determinte where you can use them. A param of type "string" can be used in places where a string is expected, where as "cidr" and "securitygroup" are for use in inbound and outbound rules. "cidr" is an ip/submask construction and "securitygroup" is assumed to be a string with a security group id in it.
+Params have a mandatory "name" and "type", and optional "description" and "default". The param's type determine where you can use, and have the following types:
+
+* "string" - can be used in places where a string is expected.
+* "cidr" - are for use in inbound and outbound rules and should be an ip/submask construction.
+* "securitygroup" - are for use in inbound and outbound rules and should be a security group id.
+* "vpc" - is for specifying the id of the VPC the security groups should be created in.
 
 Aliases are a way to assign logical names to cidr's, ports or security group. They are replaced with their values before the cloudformation template is written and only exist in the yaml template. Take for example this inbound rule to allow connections to a redis server
 

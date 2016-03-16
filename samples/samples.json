@@ -9,13 +9,13 @@
     },
     "VpcId" : {
       "Description" : "VPC for the security groups",
-      "Type" : "String"
+      "Type" : "AWS::EC2::VPC::Id"
     },
     "ParamCidr" : {
       "Type" : "String"
     },
     "ParamSg" : {
-      "Type" : "String"
+      "Type" : "AWS::EC2::SecurityGroup::Id"
     }
   },
 

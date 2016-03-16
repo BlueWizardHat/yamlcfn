@@ -5,7 +5,7 @@
   - alias: { name: "redis-port", type: "ports", value: "6379" }
 
   - param: { name: "env-prefix", type: "string", description: "environment prefix" }
-  - param: { name: "vpc-id", type: "string", description: "VPC for the security groups" }
+  - param: { name: "vpc-id", type: "vpc", description: "VPC for the security groups" }
 
   - defaults:
       vpc: "{vpc-id}"

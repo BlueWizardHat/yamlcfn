@@ -6,7 +6,7 @@
   - alias: { name: "portranges", type: "ports", value: "123,456,500-510" }
 
   - param: { name: "env-prefix", type: "string", description: "environment prefix" }
-  - param: { name: "vpc-id", type: "string", description: "VPC for the security groups" }
+  - param: { name: "vpc-id", type: "vpc", description: "VPC for the security groups" }
   - param: { name: "param-cidr", type: "cidr" }
   - param: { name: "param-sg", type: "securitygroup" }
 

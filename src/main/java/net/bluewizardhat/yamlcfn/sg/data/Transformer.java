@@ -61,7 +61,7 @@ public class Transformer {
 				.map(p ->
 					new CfnParam()
 						.setName(p.getCfnName())
-						.setType("String")
+						.setType(p.getType().getCfnType())
 						.setDescription(p.getDescription())
 						.setDefaultValue(p.getDefaultValue())
 				)

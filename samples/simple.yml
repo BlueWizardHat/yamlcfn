@@ -3,7 +3,7 @@
 
   - param:
       name: "vpc-id"
-      type: "string"
+      type: "vpc"
       description: "VPC for the security groups"
 
   - securitygroup:

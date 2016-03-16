@@ -16,7 +16,10 @@
 
 package net.bluewizardhat.yamlcfn.sg.data.yaml;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 
@@ -24,10 +27,15 @@ import lombok.Value;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class Param extends NamedElement {
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public enum ParamType {
-		CIDR,
-		SECURITYGROUP,
-		STRING;
+		CIDR("String"),
+		SECURITYGROUP("AWS::EC2::SecurityGroup::Id"),
+		STRING("String"),
+		VPC("AWS::EC2::VPC::Id");
+
+		@Getter
+		private final String cfnType;
 
 		public static ParamType from(String str) {
 			return ParamType.valueOf(str.toUpperCase());
