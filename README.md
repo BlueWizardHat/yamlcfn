@@ -114,7 +114,7 @@ You have already seen an example of "param", and you saw how a "param" became a 
 Params have a mandatory "name" and "type", and optional "description" and "default". The param's type determine where you can use, and have the following types:
 
 * "string" - can be used in places where a string is expected.
-* "cidr" - are for use in inbound and outbound rules and should be an ip/submask construction.
+* "cidr" - are for use in inbound and outbound rules and should be an ip/submask.
 * "securitygroup" - are for use in inbound and outbound rules and should be a security group id.
 * "vpc" - is for specifying the id of the VPC the security groups should be created in.
 
@@ -178,7 +178,12 @@ Notice that the indentation matters in YAML.
 
 ### Inbound rules
 
-Inbound rules always must specify "ref", "type" and "ports". "ref" is either the name a security group in the same file, an alias (type "cidr" or "security group") or a parameter (also type "cidr" or "securitygroup") or "self". "type" is "tcp", "udp" or "icmp". And "ports" is a commaseparated list of aliases or port ranges.
+Inbound rules always must specify "ref", "type" and "ports" or alternatively "cidr", "type" and "ports".
+
+* "ref" is either the name a security group in the same file, an alias (type "cidr" or "security group") or a parameter (also type "cidr" or "securitygroup") or "self"
+* "cidr" is an ip/submask
+* "type" is "tcp", "udp" or "icmp"
+* "ports" is a commaseparated list of aliases or port ranges.
 
 For example
 
@@ -186,6 +191,7 @@ For example
 	    name: "frontend-app"
 	    inbound:
 	      - { ref: "world", type: "tcp", ports: "http,https" }
+	      - { cidr: "10.0.0.0/8", type: "tcp", ports: "http,https" }
 
 	- securitygroup:
 	    name: "backend-app"
@@ -206,22 +212,6 @@ Self references can be created using either the name of the security group or "s
 Note that in that example using a "ref" of "backend-app" instead of "self" would accomplish the same thing.
 
 Self references are also an example of the descriptive nature of the yaml format, as it is much more complicated to accomplish the same in a cloudformation JSON template. In a cloudformation template self references are actually invalid to put directly in the security group definition. To accomplish a self reference you need to first create a security group and then add separate ingress rules later in the template. YamlCfn will automatically do this for you.
-
-One limitation of inbound rules in YamlCfn is that you cannot use a CIDR as a normal string, in other words this will not work
-
-	- securitygroup:
-	    name: "backend-app"
-	    inbound:
-	      - { ref: "10.0.0.0/8", type: "tcp", ports: "123" }
-
-To accomplish this you will need to create an alias such as
-
-	- alias: { name: "localnet", type: "cidr", value: "10.0.0.0/8" }
-	- securitygroup:
-	    name: "backend-app"
-	    inbound:
-	      - { ref: "localnet", type: "tcp", ports: "123" }
-
 
 ## Outbound rules and auto-matching
 
@@ -276,7 +266,7 @@ Now to combine our frontend and backend hazelcast cluster and throw in a mysql d
 	    inbound:
 	      - { ref: "backend-app", type: "tcp", ports: "mysql" }
 
-Ofcourse as already said the auto matching feature only works for security groups defined in the same file and for "self", if you need to write an outbound rule to an alias or param then you will still need to specify it with "ref", "type" and "ports".
+Ofcourse as already said the auto matching feature only works for security groups defined in the same file and for "self", if you need to write an outbound rule to an alias, param or ip/submask then you will still need to specify it with "ref" or "cidr", "type" and "ports".
 
 ### Tags
 
@@ -330,7 +320,7 @@ So let's again define the parameters "env-prefix" and "vpc-id":
 	    description: "environment prefix"
 	- param:
 	    name: "vpc-id"
-	    type: "string"
+	    type: "vpc"
 	    description: "VPC for all security groups"
 
 We can now create a "defaults" section that gives all security groups the vpc and name tag from above:

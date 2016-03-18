@@ -41,7 +41,9 @@ import net.bluewizardhat.yamlcfn.sg.data.yaml.Param;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.SecurityGroup;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.Tag;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection;
+import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.CidrWithPort;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.RefWithPort;
+import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.ValueWithPort;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.ValueHolder;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.YamlFile;
 
@@ -89,13 +91,13 @@ public class Transformer {
 	private static void transformInbound(YamlFile yamlFile, CfnFile cfnFile, Set<String> transformed, SecurityGroup ySg, CfnSecurityGroup cfnSg) {
 		Set<String> ingressNames = new HashSet<>();
 		ySg.getInbound().forEach(unresolved -> {
-			RefWithPort ref = (RefWithPort) unresolved;
+			ValueWithPort value = (ValueWithPort) unresolved;
 			CfnConnection connection = new CfnConnection()
-					.setFrom(resolveEndPoint(ref.getRef(), yamlFile, ySg, transformed))
+					.setFrom(resolveEndPoint(value, yamlFile, ySg, transformed))
 					.setTo(new CfnEndpoint.SgEndpoint(new CfnValue.RefValue(cfnSg.getName()), true))
-					.setProtocol(ref.getProtocol())
-					.setFromPort(ref.getPortSpec().getFromPort())
-					.setToPort(ref.getPortSpec().getToPort());
+					.setProtocol(value.getProtocol())
+					.setFromPort(value.getPortSpec().getFromPort())
+					.setToPort(value.getPortSpec().getToPort());
 
 			if (ingressNames.contains(connection.getName())) {
 				throw new IllegalArgumentException("Duplicate ingress rule '"+ connection.getName() +"' generated while transforming '" + ySg.getName() + "'");
@@ -113,14 +115,14 @@ public class Transformer {
 	private static void transformOutbound(YamlFile yamlFile, CfnFile cfnFile, Set<String> transformed, SecurityGroup ySg, CfnSecurityGroup cfnSg) {
 		Set<String> egressNames = new HashSet<>();
 		ySg.getOutbound().forEach(unresolved -> {
-			List<RefWithPort> refs = resolveOutboundConnections(yamlFile, unresolved, ySg);
-			for (RefWithPort ref : refs) {
+			List<? extends ValueWithPort> values = resolveOutboundConnections(yamlFile, unresolved, ySg);
+			for (ValueWithPort value : values) {
 				CfnConnection connection = new CfnConnection()
 						.setFrom(new CfnEndpoint.SgEndpoint(new CfnValue.RefValue(cfnSg.getName()), true))
-						.setTo(resolveEndPoint(ref.getRef(), yamlFile, ySg, transformed))
-						.setProtocol(ref.getProtocol())
-						.setFromPort(ref.getPortSpec().getFromPort())
-						.setToPort(ref.getPortSpec().getToPort());
+						.setTo(resolveEndPoint(value, yamlFile, ySg, transformed))
+						.setProtocol(value.getProtocol())
+						.setFromPort(value.getPortSpec().getFromPort())
+						.setToPort(value.getPortSpec().getToPort());
 
 				if (egressNames.contains(connection.getName())) {
 					throw new IllegalArgumentException("Duplicate egress rule '"+ connection.getName() +"' generated while transforming '" + ySg.getName() + "'");
@@ -136,32 +138,37 @@ public class Transformer {
 		});
 	}
 
-	private static List<RefWithPort> resolveOutboundConnections(YamlFile yamlFile, UnresolvedConnection unresolved, SecurityGroup self) {
-		if (unresolved instanceof RefWithPort) {
-			List<RefWithPort> resolved = new ArrayList<>(1);
-			resolved.add((RefWithPort) unresolved);
+	private static List<? extends ValueWithPort> resolveOutboundConnections(YamlFile yamlFile, UnresolvedConnection unresolved, SecurityGroup self) {
+		if (unresolved instanceof RefWithPort || unresolved instanceof CidrWithPort) {
+			List<ValueWithPort> resolved = new ArrayList<>(1);
+			resolved.add((ValueWithPort) unresolved);
 			return resolved;
 		}
 
-		log.trace("Attempting to resolve outbound connection '{}' to '{}'", self.getName(), unresolved.getRef());
-		SecurityGroup target = "self".equals(unresolved.getRef()) ? self : yamlFile.getSecurityGroups().get(unresolved.getRef());
+		log.trace("Attempting to resolve outbound connection '{}' to '{}'", self.getName(), unresolved.getValue());
+		SecurityGroup target = "self".equals(unresolved.getValue()) ? self : yamlFile.getSecurityGroups().get(unresolved.getValue());
 		if (target != null) {
 			List<RefWithPort> resolved = target.getInbound().stream()
-				.filter(e -> self.getName().equals(e.getRef()) || ("self".equals(e.getRef()) && self.getName().equals(target.getName())))
+				.filter(e -> e instanceof RefWithPort)
 				.map(e -> (RefWithPort) e)
-				.map(res -> new RefWithPort(unresolved.getRef(), res.getProtocol(), res.getPortSpec()))
+				.filter(e -> self.getName().equals(e.getValue()) || ("self".equals(e.getValue()) && self.getName().equals(target.getName())))
+				.map(res -> new RefWithPort(unresolved.getValue(), res.getProtocol(), res.getPortSpec()))
 				.collect(Collectors.toList());
 			if (!resolved.isEmpty()) {
 				log.trace("Found incoming connections on '{}' from '{}' -> {}", target.getName(), self.getName(), resolved);
 				return resolved;
 			}
-			throw new IllegalArgumentException("Missing inbound rule on security group: '" + unresolved.getRef() + "'.'" + self.getName() + "'");
+			throw new IllegalArgumentException("Missing inbound rule on security group: '" + unresolved.getValue() + "'.'" + self.getName() + "'");
 		}
-		throw new IllegalArgumentException("Security group: '" + unresolved.getRef() + "' not defined");
+		throw new IllegalArgumentException("Security group: '" + unresolved.getValue() + "' not defined");
 	}
 
-	private static CfnEndpoint resolveEndPoint(String ref, YamlFile yamlFile, SecurityGroup self, Set<String> transformed) {
-		Alias alias = yamlFile.getAliases().get(ref);
+	private static CfnEndpoint resolveEndPoint(ValueWithPort value, YamlFile yamlFile, SecurityGroup self, Set<String> transformed) {
+		if (value instanceof CidrWithPort) {
+			return new CfnEndpoint.CidrEndpoint(new StringValue(value.getValue()));
+		}
+
+		Alias alias = yamlFile.getAliases().get(value.getValue());
 		if (alias != null) {
 			switch (alias.getType()) {
 			case CIDR:
@@ -172,7 +179,7 @@ public class Transformer {
 				throw new IllegalArgumentException("Alias of type '" + alias.getType() + "' cannot be used for connections");
 			}
 		}
-		Matcher matcher = paramPattern.matcher(ref);
+		Matcher matcher = paramPattern.matcher(value.getValue());
 		if (matcher.matches()) {
 			Param param = yamlFile.getParameters().get(matcher.group(1));
 			if (param != null) {
@@ -185,16 +192,16 @@ public class Transformer {
 					throw new IllegalArgumentException("Parameter of type '" + param.getType() + "' cannot be used for connections");
 				}
 			}
-			throw new IllegalArgumentException("Cannot resolve '" + ref + "'");
+			throw new IllegalArgumentException("Cannot resolve '" + value.getValue() + "'");
 		}
-		if ("self".equals(ref)) {
+		if ("self".equals(value.getValue())) {
 			return new CfnEndpoint.SgEndpoint(new RefValue(self.getCfnName()), false);
 		}
-		SecurityGroup source = yamlFile.getSecurityGroups().get(ref);
+		SecurityGroup source = yamlFile.getSecurityGroups().get(value.getValue());
 		if (source != null) {
 			return new CfnEndpoint.SgEndpoint(new RefValue(source.getCfnName()), transformed.contains(source.getName()));
 		}
-		throw new IllegalArgumentException("Cannot resolve '" + ref + "'");
+		throw new IllegalArgumentException("Cannot resolve '" + value.getValue() + "'");
 	}
 
 	private static List<CfnTag> transformTags(YamlFile yamlFile, CfnFile cfnFile, List<Tag> ytags, NamedElement self) {

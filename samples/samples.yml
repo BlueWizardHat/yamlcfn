@@ -18,7 +18,16 @@
             fn: "join"
             delimiter: "-"
             values: [ "{env-prefix}", "{self:name}", "sg" ]
-        - { key: "Cfn-Name", value: "{self:cfn-name}" }
+        - { key: "CfnName", value: "{self:cfn-name}" }
+
+  - securitygroup:
+      name: "cidr-demo"
+      description: "-"
+      inbound:
+        - { cidr: "10.0.0.0/8", type: "tcp", ports: "http" }
+        - { cidr: "127.0.0.1/32", type: "tcp", ports: "1-65535" }
+      outbound:
+        - { cidr: "192.168.0.0/16", type: "tcp", ports: "http" }
 
   - securitygroup:
       name: "frontend-app-demo"

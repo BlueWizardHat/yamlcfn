@@ -38,6 +38,9 @@ import net.bluewizardhat.yamlcfn.sg.data.yaml.Protocol;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.SecurityGroup;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.Tag;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection;
+import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.CidrWithPort;
+import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.RefWithPort;
+import net.bluewizardhat.yamlcfn.sg.data.yaml.UnresolvedConnection.ValueWithPortInstantiator;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.ValueHolder;
 import net.bluewizardhat.yamlcfn.sg.data.yaml.YamlFile;
 
@@ -170,14 +173,21 @@ public class YamlParser {
 			} else if (e instanceof Map) {
 				Map<String, String> m = (Map<String, String>) e;
 				String ref = m.get("ref");
+				String cidr = m.get("cidr");
 				String type = m.get("type");
 				String ports = m.get("ports");
-				parsePorts(connections, ref, Protocol.from(type), ports);
+				if (ref != null) {
+					parsePorts(connections, ref, Protocol.from(type), ports, RefWithPort::new);
+				} else if (cidr != null) {
+					parsePorts(connections, cidr, Protocol.from(type), ports, CidrWithPort::new);
+				} else {
+					throw new IllegalArgumentException("Unable to parse: " + m);
+				}
 			}
 		});
 	}
 
-	private void parsePorts(List<UnresolvedConnection> connections, String ref, Protocol protocol, String ports) {
+	private void parsePorts(List<UnresolvedConnection> connections, String ref, Protocol protocol, String ports, ValueWithPortInstantiator instantiator) {
 		log.trace("Parsing ports: '{}'", ports);
 		String[] pa = ports.split(",");
 		for (String p : pa) {
@@ -186,7 +196,7 @@ public class YamlParser {
 
 			if (portspec != null) {
 				log.trace("Resolved '{}' = {}", trimmed, portspec);
-				connections.add(new UnresolvedConnection.RefWithPort(ref, protocol, portspec));
+				connections.add(instantiator.instantiate(ref, protocol, portspec));
 			} else {
 				Alias alias = yamlFile.alias(trimmed);
 				if (alias == null) {
@@ -200,7 +210,7 @@ public class YamlParser {
 					portspec = parseNumericPortsRange(aliasPart.trim())
 							.orElseThrow(() -> new IllegalArgumentException("Unable to parse port alias '"+ alias.getName() + "': " + aliasPart));
 					log.trace("Resolved '{}' = {}", trimmed, portspec);
-					connections.add(new UnresolvedConnection.RefWithPort(ref, protocol, portspec));
+					connections.add(instantiator.instantiate(ref, protocol, portspec));
 				}
 			}
 		}

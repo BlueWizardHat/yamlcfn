@@ -8,7 +8,7 @@
 
   - param: { name: "param-owner", type: "string", default: "operations" }
   - param: { name: "param-env-prefix", type: "string", description: "environment prefix" }
-  - param: { name: "param-vpc-id", type: "string", description: "vpc for the security groups" }
+  - param: { name: "param-vpc-id", type: "vpc", description: "vpc for the security groups" }
 
   - defaults:
       vpc: "{param-vpc-id}"

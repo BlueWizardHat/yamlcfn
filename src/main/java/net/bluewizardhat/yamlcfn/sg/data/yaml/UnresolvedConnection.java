@@ -25,21 +25,42 @@ public abstract class UnresolvedConnection {
 	@ToString
 	@AllArgsConstructor
 	public static class Ref extends UnresolvedConnection {
-		private final String ref;
+		private final String value;
 	}
 
 	@Getter
 	@ToString
-	public static class RefWithPort extends Ref {
+	public static abstract class ValueWithPort extends Ref {
 		private final Protocol protocol;
 		private final PortSpec portSpec;
 
-		public RefWithPort(String ref, Protocol protocol, PortSpec portSpec) {
-			super(ref);
+		public ValueWithPort(String value, Protocol protocol, PortSpec portSpec) {
+			super(value);
 			this.protocol = protocol;
 			this.portSpec = portSpec;
 		}
 	}
 
-	public abstract String getRef();
+	@FunctionalInterface
+	public static interface ValueWithPortInstantiator {
+		public ValueWithPort instantiate(String value, Protocol protocol, PortSpec portSpec);
+	}
+
+	@Getter
+	@ToString
+	public static class RefWithPort extends ValueWithPort {
+		public RefWithPort(String value, Protocol protocol, PortSpec portSpec) {
+			super(value, protocol, portSpec);
+		}
+	}
+
+	@Getter
+	@ToString
+	public static class CidrWithPort extends ValueWithPort {
+		public CidrWithPort(String value, Protocol protocol, PortSpec portSpec) {
+			super(value, protocol, portSpec);
+		}
+	}
+
+	public abstract String getValue();
 }

@@ -20,6 +20,45 @@
   },
 
   "Resources" : {
+    "CidrDemoSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "-",
+        "SecurityGroupIngress" : [
+          {
+            "CidrIp" : "10.0.0.0/8",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          },
+          {
+            "CidrIp" : "127.0.0.1/32",
+            "IpProtocol": "tcp",
+            "FromPort": 1,
+            "ToPort": 65535
+          }
+        ],
+        "SecurityGroupEgress" : [
+          {
+            "CidrIp" : "192.168.0.0/16",
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {
+            "Key"   : "Name",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "cidr-demo", "sg" ] ] }
+          },
+          {
+            "Key"   : "CfnName",
+            "Value" : "CidrDemoSecurityGroup"
+          }
+        ]
+      }
+    },
     "FrontendAppDemoSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -39,7 +78,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "frontend-app-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "FrontendAppDemoSecurityGroup"
           }
         ]
@@ -72,7 +111,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-cidr-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "AliasCidrDemoSecurityGroup"
           }
         ]
@@ -105,7 +144,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "param-cidr-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "ParamCidrDemoSecurityGroup"
           }
         ]
@@ -138,7 +177,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-sg-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "AliasSgDemoSecurityGroup"
           }
         ]
@@ -171,7 +210,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "param-sg-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "ParamSgDemoSecurityGroup"
           }
         ]
@@ -228,7 +267,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "alias-portranges-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "AliasPortrangesDemoSecurityGroup"
           }
         ]
@@ -245,7 +284,7 @@
             "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "EnvPrefix" }, "self-referencing-portranges-demo", "sg" ] ] }
           },
           {
-            "Key"   : "Cfn-Name",
+            "Key"   : "CfnName",
             "Value" : "SelfReferencingPortrangesDemoSecurityGroup"
           }
         ]
@@ -316,6 +355,9 @@
   },
 
   "Outputs" : {
+    "CidrDemoSecurityGroup" : {
+      "Value" : { "Ref" : "CidrDemoSecurityGroup" }
+    },
     "FrontendAppDemoSecurityGroup" : {
       "Value" : { "Ref" : "FrontendAppDemoSecurityGroup" }
     },
