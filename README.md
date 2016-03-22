@@ -180,7 +180,7 @@ Notice that the indentation matters in YAML.
 
 Inbound rules always must specify "ref", "type" and "ports" or alternatively "cidr", "type" and "ports".
 
-* "ref" is either the name a security group in the same file, an alias (type "cidr" or "security group") or a parameter (also type "cidr" or "securitygroup") or "self"
+* "ref" is either the name a security group in the same file (or "self"), an alias (type "cidr" or "security group") or a parameter (also type "cidr" or "securitygroup").
 * "cidr" is an ip/submask
 * "type" is "tcp", "udp" or "icmp"
 * "ports" is a commaseparated list of aliases or port ranges.
@@ -191,14 +191,14 @@ For example
 	    name: "frontend-app"
 	    inbound:
 	      - { ref: "world", type: "tcp", ports: "http,https" }
-	      - { cidr: "10.0.0.0/8", type: "tcp", ports: "http,https" }
+	      - { cidr: "10.0.0.0/8", type: "tcp", ports: "123" }
 
 	- securitygroup:
 	    name: "backend-app"
 	    inbound:
 	      - { ref: "frontend-app", type: "tcp", ports: "http,https" }
 
-Ignoring for a moment that we are missing the mandatory fields "description" and "vpc", this would create the security group "frontend-app" that allows connections port 80 and 443 from anywhere, using the aliases "world", "http" and "https". And "backend-app" would allow connections only from machines in the "frontend-app" security group, using the same ports.
+Ignoring for a moment that we are missing the mandatory fields "description" and "vpc", this would create the security group "frontend-app" that allows incoming connections to port 80 and 443 from anywhere, using the aliases "world", "http" and "https" and also allows incoming connections to port 123 from any ipv4 address starting with "10.". And "backend-app" would allow connections only from machines in the "frontend-app" security group, using the same ports.
 
 Self references can be created using either the name of the security group or "self". For example for a hazelcast cluster you would probably do something like this
 
@@ -273,7 +273,7 @@ Ofcourse as already said the auto matching feature only works for security group
 Tags consist of a "key" and a "value". The "key" is a simple string, the value is either a simple string, like:
 
 	tags:
-	  - { key: "Name", value: "frontend-app-" }
+	  - { key: "Name", value: "frontend-app-sg" }
 
 a string with parameter replacement, like:
 
