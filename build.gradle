@@ -1,7 +1,12 @@
 
+plugins {
+	id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
 apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
@@ -26,11 +31,17 @@ eclipse {
 	}
 }
 
+jar {
+	manifest {
+		attributes 'Main-Class': "${mainClassName}"
+	}
+}
+
 dependencies {
-    compile 'org.projectlombok:lombok:1.16.8'
-    compile 'com.google.guava:guava:19.0'
+	compile 'org.projectlombok:lombok:1.16.8'
+	compile 'com.google.guava:guava:19.0'
 	compile 'com.fasterxml.jackson.core:jackson-databind:2.7.2'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.2'
 	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.1'
 	compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.1'
 	compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.7.1'
