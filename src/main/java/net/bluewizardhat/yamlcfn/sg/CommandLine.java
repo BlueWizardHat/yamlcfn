@@ -34,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CommandLine {
 	public static void main(String[] args) {
 		try {
-			List<String> inputFileNames = new ArrayList<>();
-			String outputFileName = null;
+			List<String> sourceFileNames = new ArrayList<>();
+			String targetFileName = null;
 			for (String arg : args) {
 				if ("--debug".equals(arg)) {
 					setLoglevel(Level.DEBUG);
@@ -44,37 +44,37 @@ public class CommandLine {
 					setLoglevel(Level.TRACE);
 					log.trace("TRACE loglevel enabled");
 				} else {
-					if (outputFileName != null) {
-						inputFileNames.add(outputFileName);
+					if (targetFileName != null) {
+						sourceFileNames.add(targetFileName);
 					}
-					outputFileName = arg;
+					targetFileName = arg;
 				}
 			}
 
-			log.debug("inputFiles: {}", inputFileNames);
-			log.debug("outputFile: {}", outputFileName);
+			log.debug("sourceFiles: {}", sourceFileNames);
+			log.debug("targetFile: {}", targetFileName);
 
-			if (inputFileNames.isEmpty() || outputFileName == null) {
-				System.out.println("Usage: java -jar yamlcfn-1.0-all.jar [--debug|--trace] input1 [input2..inputn] output");
+			if (sourceFileNames.isEmpty() || targetFileName == null) {
+				System.out.println("Usage: java -jar yamlcfn-1.0-all.jar [--debug|--trace] source-1 [source-2..source-n] target");
 				return;
 			} else {
-				File outputFile = new File(outputFileName);
-				if (inputFileNames.size() > 1 && !outputFile.isDirectory()) {
-					System.err.println("When converting several files output must be a directory!");
+				File targetFile = new File(targetFileName);
+				if (sourceFileNames.size() > 1 && !targetFile.isDirectory()) {
+					System.err.println("When converting several files target must be a directory!");
 					return;
 				}
 
-				for (String inputFileName : inputFileNames) {
-					File inputFile = new File(inputFileName);
-					File actualOutputFile = outputFile;
-					if (outputFile.isDirectory()) {
-						String actualOutputName = inputFile.getName().replaceAll("\\.ya?ml$", "") + ".json";
-						actualOutputFile = new File(outputFile, actualOutputName);
+				for (String sourceFileName : sourceFileNames) {
+					File sourceFile = new File(sourceFileName);
+					File actualtargetFile = targetFile;
+					if (targetFile.isDirectory()) {
+						String actualOutputName = sourceFile.getName().replaceAll("\\.ya?ml$", "") + ".json";
+						actualtargetFile = new File(targetFile, actualOutputName);
 					}
 
-					log.info("Converting '{}' -> '{}'", inputFile.getPath(), actualOutputFile.getPath());
-					try (InputStream in = new FileInputStream(inputFile);
-						OutputStream out = new FileOutputStream(actualOutputFile)) {
+					log.info("Converting '{}' -> '{}'", sourceFile.getPath(), actualtargetFile.getPath());
+					try (InputStream in = new FileInputStream(sourceFile);
+						OutputStream out = new FileOutputStream(actualtargetFile)) {
 						YamlCfn.convert(in, out);
 					}
 				}
